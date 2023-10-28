@@ -3,8 +3,9 @@ import {HiChevronDoubleLeft} from 'react-icons/hi2';
 import {FaSearchengin} from 'react-icons/fa6';
 import {MdHome} from 'react-icons/md';
 import {motion} from "framer-motion";
-import {Link} from 'react-router-dom';
+import {Link, Routes, Route} from 'react-router-dom';
 import {logo} from "../assets"
+import {Projects, SignUp} from "../container"
 
 const Home=()=>{
     const[isSideMenu,setIsSideMenu]=useState(false);
@@ -63,7 +64,13 @@ const Home=()=>{
                     <div></div>
                 )}
             </div>
-
+            {/* Bottom section */}
+            <div className='w-full'>
+                <Routes>
+                    <Route path="/*" element={<Projects />} />
+                    <Route path="/auth" element={<SignUp />} />
+                </Routes>
+            </div>
         </div>
     </>
 };
