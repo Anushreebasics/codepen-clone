@@ -1,20 +1,28 @@
 import React, { useEffect, useState } from "react";
 import SplitPane from "react-split-pane";
 import { FaChevronDown, FaCss3, FaHtml5, FaJs } from "react-icons/fa";
+import UserProfileDetails from "../components/UserProfileDetails.jsx";
+import { MdCheck, MdEdit } from "react-icons/md";
 import { FcSettings } from "react-icons/fc";
 import { AnimatePresence, motion } from "framer-motion";
 
 import CodeMirror from "@uiw/react-codemirror";
 import { javascript } from "@codemirror/lang-javascript";
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { db } from "../config/firebase.config.js";
+import { doc, setDoc } from "firebase/firestore";
+import Alert from "../components/Alert.jsx";
 
 const NewProject = () => {
   const [html, setHtml] = useState("");
   const [css, setCss] = useState("");
   const [js, setJs] = useState("");
   const [output, setOutput] = useState("");
-  const [title, setTitle] = useState("");
-  const [isTitle, setIsTitle] = useState("Untitled");
+  const [title, setTitle] = useState("Untitled");
+  const [isTitle, setIsTitle] = useState("");
+  const [alert, setAlert] = useState(false);
+  const user = useSelector((state) => state.user.user);
 
   useEffect(() => {
     updateOutput();
@@ -35,19 +43,40 @@ const NewProject = () => {
     setOutput(combinedOutput);
   };
 
+  const saveProgram = async () => {
+    const id = `${Date.now()}`;
+    const _doc = {
+      id: id,
+      title: title,
+      html: html,
+      css: css,
+      js: js,
+      output: output,
+      user: user,
+    };
+
+    await setDoc(doc(db, "Projects", id), _doc)
+      .then((res) => {setAlert(true)})
+      .catch((err) => console.log(err));
+
+      setInterval(()=>{
+        setAlert(false);
+      }, 2000);
+  };
+
   return (
     <>
       <div className="w-screen h-screen flex flex-col justify-start items-start overflow-hidden">
         {/* Alert section */}
+        <AnimatePresence>
+          {alert && <Alert status={"Success"} alertMsg={"Project Saved.."} />}
+        </AnimatePresence>
+
         {/* Header section */}
         <header className="w-full flex items-center justify-between px-12 py-4">
           <div className="flex items-center justify-center gap-6">
             <Link to={"/home/projects"}>
-              <img
-                className="w-32 h-auto object-contain"
-                src={codepen - logo}
-                alt=""
-              />
+              <img className="w-32 h-auto object-contain" src="" alt="" />
             </Link>
 
             <div className="flex flex-col items-start justify-start">
@@ -60,6 +89,7 @@ const NewProject = () => {
                         key={"TitleInput"}
                         type="text"
                         placeholder="Your Title"
+                        className="px-3 py-2 rounded-md bg-transparent text-primaryText text-base outline-none border-none"
                         value={title}
                         onChange={(e) => {
                           setIsTitle(e.target.value);
@@ -81,20 +111,59 @@ const NewProject = () => {
                 <AnimatePresence>
                   {isTitle ? (
                     <>
-                      
+                      <motion.div
+                        key={"MdCheck"}
+                        whileTap={{ scale: 0.9 }}
+                        className="cursor-pointer"
+                        onClick={() => setIsTitle(false)}
+                      >
+                        <MdCheck className="text-2xl text-emerald-500" />
+                      </motion.div>
                     </>
                   ) : (
                     <>
-                     
+                      <motion.div
+                        key={"MdEdit"}
+                        whileTap={{ scale: 0.9 }}
+                        className="cursor-pointer"
+                        onClick={() => setIsTitle(false)}
+                      >
+                        <MdEdit className="text-2xl text-primaryText" />
+                      </motion.div>
                     </>
                   )}
                 </AnimatePresence>
               </div>
               {/* follow */}
+              <div className="flex items-center justify-center px-3 -mt-2 gap=2">
+                <p className="text-primaryText text-sm">
+                  {user?.displayName
+                    ? user?.displayName
+                    : `${user?.email.split("@")[0]}`}
+                </p>
+                <motion.p
+                  whileTap={{ scale: 0.9 }}
+                  className="text-[10px] bg-emerald-500 rounded-sm px-2 py-[1px] text-primary font-semibold cursor-pointer"
+                >
+                  + Follow
+                </motion.p>
+              </div>
             </div>
           </div>
 
           {/* user section */}
+          {user && (
+            <div className="flex items-center justify-center gap-4">
+              <motion.button
+                onClick={saveProgram}
+                whileTap={{ scale: 0.9 }}
+                className="px-6 py-4 bg-primaryText cursor-pointer text-base text-primary font-semibold rounded-md"
+              >
+                Save
+              </motion.button>
+              <UserProfileDetails />
+            </div>
+          )}
         </header>
 
         {/* coding section */}
